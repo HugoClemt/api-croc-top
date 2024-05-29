@@ -536,18 +536,15 @@ app.put('/posts/:id/unlike', authenticateToken, async (req, res) => {
         const postId = req.params.id;
         const userId = req.user.userId;
 
-        // Trouver le post
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        // Vérifier si l'utilisateur a déjà liké le post
         if (!post.likes.includes(userId)) {
             return res.status(400).json({ message: 'You have not liked this post' });
         }
 
-        // Retirer l'ID de l'utilisateur de la liste des likes
         post.likes = post.likes.filter(id => id.toString() !== userId);
         await post.save();
 
