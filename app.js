@@ -59,7 +59,11 @@ app.post('/signup', async (req, res) => {
           picture_avatar
       });
       const savedUser = await newUser.save();
-      res.status(201).json({ message: 'User created', user: savedUser });
+
+    const accessToken = jwt.sign({ userId: savedUser._id, role: savedUser.role }, 'secretKey', { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ userId: savedUser._id, role: savedUser.role }, 'refreshSecretKey', { expiresIn: '7d' });
+
+    res.status(201).json({ message: 'User created', user: savedUser, accessToken, refreshToken });
   } catch (err) {
       res.status(400).json({ message: err.message });
   }
