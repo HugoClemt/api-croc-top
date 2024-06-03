@@ -143,6 +143,25 @@ app.post('/token', (req, res) => {
 });
 
 /**
+ * Route handler for getting the authenticated user.
+ * @name GET /users/me
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ */
+app.get('/users/me', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+/**
  * Route handler for getting all users.
  * @name GET /users
  * @function
