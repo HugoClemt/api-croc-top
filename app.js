@@ -7,7 +7,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-
+const multer = require('multer');
 const User = require('./models/user');
 const Post = require('./models/post');
 const Comment = require('./models/comment');
@@ -235,6 +235,17 @@ app.put('/users/me', authenticateToken, async (req, res) => {
     }
 });
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname);
+    }
+  });
+
+  const upload = multer({ storage: storage });
+
 /**
  * Route handler for creating a new post.
  * @name POST /posts
@@ -242,28 +253,29 @@ app.put('/users/me', authenticateToken, async (req, res) => {
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  */
-app.post('/posts', authenticateToken, async (req, res) => {
-  const { title, photos, category, prepTime, cookTime, allergens, prepSteps } = req.body;
-  try {
+app.post('/posts', authenticateToken, upload.array('photos', 12), async (req, res) => {
+    const { title, category, prepTime, cookTime, allergens, prepSteps } = req.body;
+    const photos = req.files.map(file => file.path);
+    try {
       const newPost = new Post({
-          title,
-          photos,
-          category,
-          prepTime,
-          cookTime,
-          allergens,
-          prepSteps,
-          author: req.user.userId
+        title,
+        photos,
+        category,
+        prepTime,
+        cookTime,
+        allergens,
+        prepSteps,
+        author: req.user.userId
       });
       const savedPost = await newPost.save();
       const user = await User.findById(req.user.userId);
       user.posts.push(savedPost._id);
       await user.save();
       res.status(201).json({ message: 'Post created', post: savedPost });
-  } catch (err) {
+    } catch (err) {
       res.status(400).json({ message: err.message });
-  }
-});
+    }
+  });
 
 /**
  * Route handler for getting all posts.
