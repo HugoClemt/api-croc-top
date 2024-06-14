@@ -15,6 +15,11 @@ const postSchema = new mongoose.Schema({
         enum: ['Gluten', 'Crustacés', 'Oeufs', 'Poissons', 'Arachides', 'Soja', 'Lait', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites'] 
     }],
     prepSteps: [{ type: String, required: true }],
+    ingredients: [{ 
+        name: { type: String, required: true }, 
+        quantity: { type: String, required: true }, 
+        unit: { type: String, required: true }
+    }],
     publishDate: { type: Date, default: Date.now },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],

@@ -256,17 +256,36 @@ const storage = multer.diskStorage({
 app.post('/posts', authenticateToken, upload.array('photos', 12), async (req, res) => {
     const { title, category, prepTime, cookTime, allergens, prepSteps } = req.body;
     const photos = req.files.map(file => file.path);
+
+    let ingredients;
+
     try {
-      const newPost = new Post({
-        title,
-        photos,
-        category,
-        prepTime,
-        cookTime,
-        allergens,
-        prepSteps,
-        author: req.user.userId
-      });
+        if (typeof req.body.ingredients === 'string') {
+            ingredients = JSON.parse(req.body.ingredients);
+        } else {
+            ingredients = req.body.ingredients;
+        }
+
+        if (!Array.isArray(ingredients) || ingredients.length === 0) {
+            return res.status(400).json({ message: 'Ingredients are required and must be an array.' });
+        }
+
+        const newPost = new Post({
+            title,
+            photos,
+            category,
+            prepTime,
+            cookTime,
+            allergens,
+            prepSteps,
+            ingredients: ingredients.map(ingredient => ({
+                name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit
+            })),
+            author: req.user.userId
+        });
+
       const savedPost = await newPost.save();
       const user = await User.findById(req.user.userId);
       user.posts.push(savedPost._id);
